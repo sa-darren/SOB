@@ -92,6 +92,7 @@ export async function paidRequest(
   console.log(`check: ${checked.blockers?.length ?? 0} blocker(s), ${checked.suggestions?.length ?? 0} suggestion(s)`);
   for (const b of checked.blockers ?? []) console.log(`  blocker    ${JSON.stringify(b)}`);
   for (const s of checked.suggestions ?? []) console.log(`  suggestion ${JSON.stringify(s)}`);
+  for (const step of (checked.plan as { title: string }[] | undefined) ?? []) console.log(`  plan       ${step.title}`);
   if (checked.blockers?.length) throw new Error("IMD would refuse this request; nothing was quoted or paid");
   if (!pay) {
     console.log("Nothing was quoted or paid. Run again with --pay to spend IMD.");

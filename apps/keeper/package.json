@@ -9,7 +9,8 @@
     "question": "tsx src/question.ts",
     "settle": "tsx --env-file-if-exists=.env src/settle.ts",
     "ask": "tsx --env-file-if-exists=.env src/ask.ts",
-    "buy-schedule": "tsx --env-file-if-exists=.env src/buy-schedule.ts"
+    "buy-schedule": "tsx --env-file-if-exists=.env src/buy-schedule.ts",
+    "launch": "tsx --env-file-if-exists=.env src/launch.ts"
   },
   "dependencies": {
     "@ship-or-burn/shared": "workspace:*",
