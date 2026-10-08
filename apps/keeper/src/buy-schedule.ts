@@ -1,6 +1,9 @@
 // Buy a vault's daily schedule (0.5 IMD per run). Afterwards the funder calls linkSchedule(id, scheduleId).
 //
-//   pnpm --filter @ship-or-burn/keeper buy-schedule OWNER/REPO --tranches 10 [--runs N] [--vault 0] [--chain 1] [--pay] [--approve-permit2]
+//   pnpm --filter @ship-or-burn/keeper buy-schedule OWNER/REPO --tranches 10 [--runs N] [--start 2026-10-18T00:00:00Z] [--vault 0] [--chain 1] [--pay] [--approve-permit2]
+//
+// --start delays the first run to the first 00:05 UTC slot at or after that time. Without it the first run
+// is the next 00:05 UTC, so create the vault first: the baseline must come after the vault.
 //
 // Without --pay it only runs IMD's free check and prints the price.
 import { parseArgs } from "node:util";
@@ -13,9 +16,11 @@ const { values, positionals } = parseArgs({
   options: {
     tranches: { type: "string" },
     runs: { type: "string" },
+    start: { type: "string" },
     vault: { type: "string" },
     chain: { type: "string", default: "1" },
     pay: { type: "boolean", default: false },
+    force: { type: "boolean", default: false },
     "approve-permit2": { type: "boolean", default: false },
   },
 });
@@ -45,11 +50,12 @@ const body = scheduleBody({
   chainId,
   consumer: deployed.address,
   runs,
+  startAt: values.start,
   label: values.vault ? `Ship or Burn vault ${values.vault}: ${repo}` : undefined,
 });
-console.log(`${runs} runs at 00:05 UTC for ${repo}, about ${formatUnits(BigInt(runs) * 5n * 10n ** 17n, 18)} IMD at today's listed price`);
+console.log(`${runs} runs at 00:05 UTC${values.start ? ` from ${values.start}` : ""} for ${repo}, about ${formatUnits(BigInt(runs) * 5n * 10n ** 17n, 18)} IMD at today's listed price`);
 
-const paid = await paidRequest("schedule.create", body, { pay: values.pay, approve: values["approve-permit2"] }).catch(fail);
+const paid = await paidRequest("schedule.create", body, { pay: values.pay, approve: values["approve-permit2"], force: values.force }).catch(fail);
 if (paid?.result?.kind === "schedule") {
   console.log(`\nSchedule ${paid.result.scheduleId} is live. Link it from the funder's wallet: linkSchedule(vaultId, "${paid.result.scheduleId}")`);
 }

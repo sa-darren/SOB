@@ -14,6 +14,7 @@ const { values, positionals } = parseArgs({
     chain: { type: "string", default: "1" },
     consumer: { type: "string" },
     pay: { type: "boolean", default: false },
+    force: { type: "boolean", default: false },
     "approve-permit2": { type: "boolean", default: false },
   },
 });
@@ -25,7 +26,7 @@ const consumer = (values.consumer ?? SHIP_OR_BURN[chainId]?.address ?? DEAD) as 
 if (consumer === DEAD) console.log("No ShipOrBurn address yet: this attestation is a wording test and cannot settle a vault.");
 
 const { input } = scheduleBody({ repo, chainId, consumer, runs: 1 });
-const paid = await paidRequest("oracle.request", input, { pay: values.pay, approve: values["approve-permit2"] }).catch(fail);
+const paid = await paidRequest("oracle.request", input, { pay: values.pay, approve: values["approve-permit2"], force: values.force }).catch(fail);
 if (paid?.result?.kind === "oracle") {
   console.log(`\nFollow it, then check the hash:\n  pnpm --filter @ship-or-burn/keeper verify-question ${paid.result.requestId}`);
 }

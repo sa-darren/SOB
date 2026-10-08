@@ -25,6 +25,8 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
 
+const DUPLICATE_WINDOW_MS = 30 * 60 * 1000;
+
 export const PERMIT2: Address = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 
 // canonical JSON: sorted keys, no whitespace
@@ -86,7 +88,7 @@ export interface PaidResult {
 export async function paidRequest(
   action: string,
   input: unknown,
-  { pay = false, approve = false }: { pay?: boolean; approve?: boolean } = {},
+  { pay = false, approve = false, force = false }: { pay?: boolean; approve?: boolean; force?: boolean } = {},
 ): Promise<PaidResult | undefined> {
   const checked = await check(action, input);
   console.log(`check: ${checked.blockers?.length ?? 0} blocker(s), ${checked.suggestions?.length ?? 0} suggestion(s)`);
@@ -105,6 +107,19 @@ export async function paidRequest(
   const account = privateKeyToAccount(env.PAYER_PRIVATE_KEY as Hex);
   const transport = http(env.RPC_URL);
   const publicClient = createPublicClient({ chain: mainnet, transport });
+
+  // a second payment for the same action within minutes is almost always a mistake
+  if (!force) {
+    const recent = (await (await fetch(`${IMD_API}/requests/paid-by/${account.address}`)).json()) as {
+      orders?: { orderId: string; action: string; createdAt: string }[];
+    };
+    const dup = recent.orders?.find((o) => o.action === action && Date.now() - Date.parse(o.createdAt) < DUPLICATE_WINDOW_MS);
+    if (dup) {
+      throw new Error(
+        `This wallet already paid for a ${action} at ${dup.createdAt} (order ${dup.orderId}). Nothing was quoted or paid. Pass --force if a second one is intended.`,
+      );
+    }
+  }
 
   const token = env.IMD_PAID_TOKEN ?? randomBytes(32).toString("hex");
   const auth = { Authorization: `Bearer ${token}` };

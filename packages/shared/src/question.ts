@@ -89,12 +89,15 @@ export function scheduleBody({
   consumer,
   runs,
   label,
+  startAt,
 }: {
   repo: string;
   chainId?: number;
   consumer: Address;
   runs: number;
   label?: string;
+  /** ISO 8601 with offset: the first run is the first 00:05 UTC slot at or after it. */
+  startAt?: string;
 }) {
   const q = mergedPrQuestion(repo);
   return {
@@ -102,6 +105,7 @@ export function scheduleBody({
     action: "oracle.request",
     cadence: { cron: "5 0 * * *", tz: "UTC" },
     runs,
+    ...(startAt ? { startAt } : {}),
     input: {
       v: 1,
       question: q.question,
@@ -110,7 +114,9 @@ export function scheduleBody({
       answerType: "uint256",
       evidence: "panel",
       definitions: q.definitions,
-      panelSize: 5,
+      // IMD signs once `quorum` answers match, and a panel costs the same at any size:
+      // seven seats let three members fail or dissent, where five let only one
+      panelSize: 7,
       quorum: 4,
       toleranceBps: 0,
       validForSeconds: 604800,

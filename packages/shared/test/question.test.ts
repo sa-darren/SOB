@@ -35,13 +35,20 @@ describe("question hash", () => {
 });
 
 describe("schedule body", () => {
-  it("asks the vault's question with the contract's panel minimums", () => {
+  it("asks the vault's question with a panel the contract accepts", () => {
     const consumer = "0x000000000000000000000000000000000000dEaD";
     const body = scheduleBody({ repo: "owner/repo", consumer, runs: 12 });
     const q = mergedPrQuestion("owner/repo");
     expect(body.input.question).toBe(q.question);
     expect(body.input.definitions).toEqual(q.definitions);
-    expect(body.input).toMatchObject({ panelSize: 5, quorum: 4, toleranceBps: 0, answerType: "uint256" });
+    expect(body.input).toMatchObject({ quorum: 4, toleranceBps: 0, answerType: "uint256" });
+    // ShipOrBurn.MIN_PANEL and MIN_AGREED
+    expect(body.input.panelSize).toBeGreaterThanOrEqual(5);
+    expect(body.input.quorum).toBeGreaterThanOrEqual(4);
+    expect(body).not.toHaveProperty("startAt");
+    expect(scheduleBody({ repo: "owner/repo", consumer, runs: 4, startAt: "2026-10-18T00:00:00Z" }).startAt).toBe(
+      "2026-10-18T00:00:00Z",
+    );
     expect(body.input.consumer).toEqual({ chainId: 1, verifyingContract: consumer.toLowerCase() });
   });
 });
