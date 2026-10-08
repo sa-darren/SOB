@@ -21,18 +21,19 @@ The keeper wallet is a second fresh wallet. Its key goes in GitHub Actions secre
 
 IMD is `0xd34a99bc0f67ae1bbd63c660e6d0b0dd03e263b7` on Ethereum mainnet (symbol IMD, 18 decimals). Every paid IMD action costs 0.5 IMD, and IMD's server pays the gas for those payments.
 
+The plan below is the cheapest one that still shows a ship and a burn: 2 IMD in fees, plus a token-sized deposit.
+
 | Stage | IMD | ETH for gas |
 | --- | --- | --- |
-| Today: three oracle tests | 1.5 | One Permit2 approval |
-| Oct 10: Sepolia rehearsal launch | 0.5 | None |
-| Oct 11: mainnet launch | 0.5 | None |
-| Oct 11: vault 0 deposit, 10 tranches of 1 IMD | 10 | One approval and one `createVault` (about 252k gas) |
-| Oct 11: vault 0 schedule, 12 runs | 6 | One `linkSchedule` |
-| Oct 20: site hosting job | 0.5 | None |
-| **Total, main wallet** | **19** | **About 0.01 ETH is plenty** |
+| Mainnet launch | 0.5 | None |
+| Vault 0 deposit, 2 tranches of 0.001 IMD | 0.002 | One approval and one `createVault` (about 252k gas) |
+| Vault 0 schedule, 3 runs: baseline, ship, burn | 1.5 | One `linkSchedule` |
+| **Total, main wallet** | **about 2.01** | **About 0.01 ETH is plenty** |
 | Keeper wallet | 0 | 0.02 ETH |
 
-To start today you only need 1.5 IMD and about 0.005 ETH in the main wallet. Buy the rest before Oct 11. Check the IMD price first: the blueprint's figure of about $9.73 is from Sept 25.
+This plan has no spare. Each of these costs another 0.5 IMD: a launch that has to be retried, a panel that disagrees (a run is spent even when no answer is signed), or an extra day of verdicts. Holding 2.5 to 3 IMD covers one such failure. Any wallet can add runs to a schedule later with a top-up.
+
+There is no separate oracle test before the launch. The first scheduled run is both the wording test and the baseline. If the panel refuses the question, the wording can change without redeploying, because the question is set per vault, not in the contract.
 
 Payments to IMD are always made in mainnet IMD, including the Sepolia rehearsal.
 
@@ -51,15 +52,21 @@ Payments to IMD are always made in mainnet IMD, including the Sepolia rehearsal.
 
    The IMD figure is in atomic units: `1500000000000000000` is 1.5 IMD.
 5. **Give the scripts the key.** Copy `apps/keeper/.env.example` to `apps/keeper/.env` and fill in `RPC_URL` and `PAYER_PRIVATE_KEY`. `.env` is ignored by git; never commit it or paste the key anywhere else.
-6. **Run the free check, then the paid test:**
+6. **Run the free check.** It spends nothing and confirms the scripts can reach IMD:
 
    ```sh
    pnpm --filter @ship-or-burn/keeper ask
-   pnpm --filter @ship-or-burn/keeper ask --pay --approve-permit2
    ```
 
-   The first command spends nothing. The second sends one approval transaction (an unlimited IMD allowance to Permit2, the standard contract at `0x000000000022D473030F116dDEE9F6B43aC78BA3`), then pays 0.5 IMD. Leave out `--approve-permit2` on later runs.
-7. **Verify the answer** once the request reads attested:
+7. **After the launch, buy the schedule:**
+
+   ```sh
+   pnpm --filter @ship-or-burn/keeper buy-schedule sa-darren/SOB --tranches 2 --runs 3 --vault 0
+   pnpm --filter @ship-or-burn/keeper buy-schedule sa-darren/SOB --tranches 2 --runs 3 --vault 0 --pay --approve-permit2
+   ```
+
+   The first command only prints the price. The second sends one approval transaction (an unlimited IMD allowance to Permit2, the standard contract at `0x000000000022D473030F116dDEE9F6B43aC78BA3`), then pays 1.5 IMD. Leave out `--approve-permit2` on later runs.
+8. **Verify each answer** once its request reads attested:
 
    ```sh
    pnpm --filter @ship-or-burn/keeper verify-question REQUEST_ID

@@ -1,17 +1,18 @@
 // Buy a vault's daily schedule (0.5 IMD per run). Afterwards the funder calls linkSchedule(id, scheduleId).
 //
-//   pnpm --filter @ship-or-burn/keeper buy-schedule OWNER/REPO --tranches 10 [--vault 0] [--chain 1] [--pay] [--approve-permit2]
+//   pnpm --filter @ship-or-burn/keeper buy-schedule OWNER/REPO --tranches 10 [--runs N] [--vault 0] [--chain 1] [--pay] [--approve-permit2]
 //
 // Without --pay it only runs IMD's free check and prints the price.
 import { parseArgs } from "node:util";
 import { SHIP_OR_BURN, scheduleBody } from "@ship-or-burn/shared";
 import { formatUnits } from "viem";
-import { paidRequest } from "./pay.ts";
+import { fail, paidRequest } from "./pay.ts";
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     tranches: { type: "string" },
+    runs: { type: "string" },
     vault: { type: "string" },
     chain: { type: "string", default: "1" },
     pay: { type: "boolean", default: false },
@@ -22,7 +23,7 @@ const { values, positionals } = parseArgs({
 const repo = positionals[0];
 const tranches = Number(values.tranches);
 if (!repo || !Number.isInteger(tranches) || tranches < 1) {
-  console.error("usage: buy-schedule OWNER/REPO --tranches N [--vault ID] [--chain 1] [--pay] [--approve-permit2]");
+  console.error("usage: buy-schedule OWNER/REPO --tranches N [--runs N] [--vault ID] [--chain 1] [--pay] [--approve-permit2]");
   process.exit(1);
 }
 const chainId = Number(values.chain);
@@ -32,8 +33,13 @@ if (!deployed) {
   process.exit(1);
 }
 
-// one baseline, one verdict per tranche, one spare
-const runs = tranches + 2;
+// one baseline, one verdict per tranche, one spare; --runs buys fewer, and any wallet can top up later
+const runs = values.runs ? Number(values.runs) : tranches + 2;
+if (!Number.isInteger(runs) || runs < 1) {
+  console.error("--runs must be a whole number of at least 1");
+  process.exit(1);
+}
+if (runs < tranches + 1) console.log(`${runs} runs cannot settle all ${tranches} tranches: that takes a baseline plus one run each.`);
 const body = scheduleBody({
   repo,
   chainId,
@@ -43,7 +49,7 @@ const body = scheduleBody({
 });
 console.log(`${runs} runs at 00:05 UTC for ${repo}, about ${formatUnits(BigInt(runs) * 5n * 10n ** 17n, 18)} IMD at today's listed price`);
 
-const paid = await paidRequest("schedule.create", body, { pay: values.pay, approve: values["approve-permit2"] });
+const paid = await paidRequest("schedule.create", body, { pay: values.pay, approve: values["approve-permit2"] }).catch(fail);
 if (paid?.result?.kind === "schedule") {
   console.log(`\nSchedule ${paid.result.scheduleId} is live. Link it from the funder's wallet: linkSchedule(vaultId, "${paid.result.scheduleId}")`);
 }

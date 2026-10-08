@@ -40,6 +40,14 @@ const canon = (v: unknown): string =>
             .join(",")}}`
         : JSON.stringify(v);
 
+/** Print what went wrong in one line and exit, instead of a stack trace. */
+export function fail(e: unknown): never {
+  const short = (e as { shortMessage?: string }).shortMessage;
+  const details = (e as { details?: string }).details;
+  console.error(`\nFailed: ${short ? `${short}${details ? ` (${details})` : ""}` : e instanceof Error ? e.message : e}`);
+  process.exit(1);
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Free: what a quote would say. Returns the parsed response; throws on a transport error. */
@@ -156,7 +164,14 @@ export async function paidRequest(
     address: account.address,
     signTypedData: (m: { domain: any; types: any; primaryType: string; message: any }) => account.signTypedData(m),
   };
-  const client = x402Client.fromConfig({ schemes: [{ network: req.network, client: new ExactEvmScheme(signer) }] });
+  if (req.asset.toLowerCase() !== asset.toLowerCase() || BigInt(req.amount) !== amount || req.payTo !== quote.payment.payTo) {
+    throw new Error(`the challenge asks for something other than the quote: ${JSON.stringify(req)}`);
+  }
+  const client = x402Client.fromConfig({
+    schemes: [{ network: req.network, client: new ExactEvmScheme(signer) }],
+    // IMD is not one of x402's default assets: allow it, capped at exactly the quoted amount
+    spendControls: { allowedAssets: [{ network: req.network, asset: req.asset, maxAmountPerPayment: String(amount) }] },
+  });
   const { extensions: _dropped, ...generated } = await client.createPaymentPayload({
     x402Version: 2,
     resource: ch.resource,
