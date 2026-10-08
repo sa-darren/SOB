@@ -5,14 +5,15 @@
 //   CHAIN_ID              default 1
 //   SHIP_OR_BURN_ADDRESS  overrides packages/shared constants (with DEPLOY_BLOCK)
 //   WEBHOOK_URL           optional; receives {content} for each verdict and alert
-//   LOG_CHUNK             blocks per getLogs call, default 10000
-import { SHIP_OR_BURN, shipOrBurnAbi, toAttestationStruct } from "@ship-or-burn/shared";
+//   LOG_CHUNK             blocks per getLogs call, default 5000
+import { LOG_CHUNK, PUBLIC_RPCS, SHIP_OR_BURN, shipOrBurnAbi, toAttestationStruct } from "@ship-or-burn/shared";
 import {
   type Address,
   BaseError,
   ContractFunctionRevertedError,
   createPublicClient,
   createWalletClient,
+  fallback,
   type Hex,
   http,
   parseEventLogs,
@@ -40,7 +41,8 @@ const dryRun = env.DRY_RUN === "1";
 const account = env.KEEPER_PRIVATE_KEY ? privateKeyToAccount(env.KEEPER_PRIVATE_KEY as Hex) : undefined;
 if (!account && !dryRun) throw new Error("KEEPER_PRIVATE_KEY is not set (or run with DRY_RUN=1)");
 
-const transport = http(env.RPC_URL);
+// RPC_URL first; the public endpoints cover it when it refuses old logs or is down
+const transport = fallback([http(env.RPC_URL), ...PUBLIC_RPCS.map((url) => http(url))]);
 const publicClient = createPublicClient({ chain, transport });
 const walletClient = account ? createWalletClient({ account, chain, transport }) : undefined;
 const contract = { address: deployed.address, abi: shipOrBurnAbi } as const;
@@ -62,7 +64,7 @@ async function notify(content: string) {
 /** Every vault's question prefix and the schedules its funder linked, from the deploy block to the head. */
 async function readVaults(head: bigint) {
   const vaults = new Map<bigint, { prefix: Hex; schedules: Set<string> }>();
-  const step = BigInt(env.LOG_CHUNK ?? 10_000);
+  const step = env.LOG_CHUNK ? BigInt(env.LOG_CHUNK) : LOG_CHUNK;
   for (let from = deployed!.deployBlock; from <= head; from += step) {
     const to = from + step - 1n < head ? from + step - 1n : head;
     const logs = parseEventLogs({
