@@ -1,0 +1,20 @@
+{
+  "name": "@ship-or-burn/keeper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node -e \"\"",
+    "verify-question": "tsx src/verify-question.ts",
+    "question": "tsx src/question.ts",
+    "settle": "tsx --env-file-if-exists=.env src/settle.ts",
+    "ask": "tsx --env-file-if-exists=.env src/ask.ts",
+    "buy-schedule": "tsx --env-file-if-exists=.env src/buy-schedule.ts"
+  },
+  "dependencies": {
+    "@ship-or-burn/shared": "workspace:*",
+    "@x402/core": "2.28.0",
+    "@x402/evm": "2.28.0",
+    "viem": "^2.57.3"
+  }
+}
