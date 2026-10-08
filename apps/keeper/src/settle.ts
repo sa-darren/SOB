@@ -33,6 +33,9 @@ const deployed = env.SHIP_OR_BURN_ADDRESS
   : SHIP_OR_BURN[chainId];
 if (!deployed) throw new Error(`No ShipOrBurn address for chain ${chainId}: set SHIP_OR_BURN_ADDRESS and DEPLOY_BLOCK`);
 
+/** ShipOrBurn.settle rejects a window more than this many blocks old. */
+const MAX_LAG = 600n;
+
 const dryRun = env.DRY_RUN === "1";
 const account = env.KEEPER_PRIVATE_KEY ? privateKeyToAccount(env.KEEPER_PRIVATE_KEY as Hex) : undefined;
 if (!account && !dryRun) throw new Error("KEEPER_PRIVATE_KEY is not set (or run with DRY_RUN=1)");
@@ -108,7 +111,7 @@ function revertName(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-async function settleVault(id: bigint, prefix: Hex, schedules: Set<string>, now: bigint) {
+async function settleVault(id: bigint, prefix: Hex, schedules: Set<string>, now: bigint, headNumber: bigint) {
   const vault = await publicClient.readContract({ ...contract, functionName: "getVault", args: [id] });
   if (vault.closed) return;
   if (now > vault.deadline) {
@@ -122,6 +125,11 @@ async function settleVault(id: bigint, prefix: Hex, schedules: Set<string>, now:
     const next = await publicClient.readContract({ ...contract, functionName: "nextVerdictBlock", args: [id] });
     if (BigInt(a.toBlock) < next) continue; // already counted, or too soon after the last verdict
     if (BigInt(a.expiresAt) < now) continue;
+    // the contract counts a window only within 600 blocks (about two hours) of its end
+    if (headNumber - BigInt(a.toBlock) > MAX_LAG) {
+      console.log(`vault ${id}: request ${r.id} is past its 600-block settlement window and can no longer be counted`);
+      continue;
+    }
 
     const args = [id, toAttestationStruct(a), r.signature, prefix] as const;
     let request;
@@ -171,7 +179,7 @@ const vaults = await readVaults(head.number);
 console.log(`chain ${chainId} ${deployed.address}: ${vaults.size} vault(s) at block ${head.number}`);
 for (const [id, { prefix, schedules }] of vaults) {
   try {
-    await settleVault(id, prefix, schedules, head.timestamp);
+    await settleVault(id, prefix, schedules, head.timestamp, head.number);
   } catch (e) {
     // one vault's failure must not stop the others
     console.error(`vault ${id}: ${e instanceof Error ? e.message : e}`);
