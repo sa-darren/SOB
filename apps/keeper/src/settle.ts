@@ -32,7 +32,11 @@ if (!env.RPC_URL) throw new Error("RPC_URL is not set");
 const deployed = env.SHIP_OR_BURN_ADDRESS
   ? { address: env.SHIP_OR_BURN_ADDRESS as Address, deployBlock: BigInt(env.DEPLOY_BLOCK ?? 0) }
   : SHIP_OR_BURN[chainId];
-if (!deployed) throw new Error(`No ShipOrBurn address for chain ${chainId}: set SHIP_OR_BURN_ADDRESS and DEPLOY_BLOCK`);
+if (!deployed) {
+  // before the launch there is nothing to settle; a timer can already be running
+  console.log(`No ShipOrBurn address for chain ${chainId} yet: nothing to settle`);
+  process.exit(0);
+}
 
 /** ShipOrBurn.settle rejects a window more than this many blocks old. */
 const MAX_LAG = 600n;

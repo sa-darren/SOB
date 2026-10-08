@@ -42,3 +42,21 @@ pnpm --filter @ship-or-burn/keeper settle
 ```
 
 The paying scripts and the keeper read `apps/keeper/.env`; see `apps/keeper/.env.example`.
+
+## Running the keeper on a Mac
+
+GitHub Actions is the planned home for the keeper. Until it is available, a launchd timer runs the same tick every 10 minutes:
+
+```sh
+apps/keeper/scripts/launchd.sh install     # start it
+apps/keeper/scripts/launchd.sh status      # is it loaded, and the last log lines
+apps/keeper/scripts/launchd.sh uninstall   # stop it
+```
+
+The contract counts a verdict only within 600 blocks (about two hours) of the oracle run, so the Mac must be awake and online for the 00:05 UTC run. launchd does not wake a sleeping Mac; schedule a daily wake a few minutes earlier in local time, for example in Lagos:
+
+```sh
+sudo pmset repeat wakeorpoweron MTWRFSU 01:00:00
+```
+
+The log is `~/Library/Logs/shiporburn-keeper.log`.
