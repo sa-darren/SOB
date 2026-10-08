@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+/* One token set, from the blueprint's visual system: a departures board for builders. */
+@theme {
+  --color-concourse: #d9dcd8;
+  --color-night: #0e1012;
+  --color-board: #111316;
+  --color-flap: #1d2023;
+  --color-ivory: #f2efe6;
+  --color-signal-green: #35d07f;
+  --color-signal-red: #ff5a36;
+  --color-signal-yellow: #ffc72c;
+  --color-ink: #16181a;
+  --color-ink-2: #4f555b;
+
+  --color-page: var(--page);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-rule: var(--rule);
+
+  --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+
+  /* 1.25 scale from a 16px body */
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 25px;
+  --text-2xl: 31px;
+  --text-3xl: 39px;
+  --text-4xl: 49px;
+}
+
+:root {
+  --page: #d9dcd8;
+  --text: #16181a;
+  --text-2: #4f555b;
+  --rule: #b9bdb8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0e1012;
+    --text: #f2efe6;
+    --text-2: #a4a9ad;
+    --rule: #2a2e32;
+  }
+}
+
+body {
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 3px solid #ffc72c;
+  outline-offset: 2px;
+}
+
+/* A flap: one character cell with a hinge across the middle. */
+.flap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.72em;
+  height: 1.28em;
+  border-radius: 3px;
+  background: #1d2023;
+  color: #f2efe6;
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.flap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #111316;
+}
+
+.flap-green {
+  color: #35d07f;
+}
+.flap-red {
+  color: #ff5a36;
+}
+.flap-yellow {
+  color: #ffc72c;
+}
+
+/* a burned day keeps its char for good */
+.flap-scorched {
+  background: radial-gradient(120% 90% at 50% 110%, #3a1a10 0%, #1d2023 62%);
+}
+
+.flap-step {
+  animation: flap-step 60ms linear;
+  transform-origin: 50% 50%;
+}
+
+@keyframes flap-step {
+  from {
+    transform: rotateX(-88deg);
+    opacity: 0.55;
+  }
+  to {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.lamp {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #2a2e32;
+  transform: scale(0.82);
+  /* a small overshoot, like a spring settling */
+  transition:
+    transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 180ms linear;
+}
+
+.lamp-on {
+  background: #ffc72c;
+  transform: scale(1);
+}
+
+.lamp-signed {
+  background: #35d07f;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flap-step {
+    animation: none;
+  }
+  .lamp {
+    transition: none;
+  }
+}

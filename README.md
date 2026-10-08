@@ -12,7 +12,7 @@ This repo is the app, the keeper and the shared question builder. It is also the
 | --- | --- |
 | `packages/shared` | The ABI, constants, and `question.ts`, the only place a question is built |
 | `apps/keeper` | Scripts that carry IMD attestations on-chain |
-| `apps/web` | The Ship Board (not started) |
+| `apps/web` | The site: Ship Board, vault pages and the verify-it-yourself page (`pnpm --filter @ship-or-burn/web dev`) |
 
 ## Setup
 

@@ -1,6 +1,14 @@
 import type { Address } from "viem";
 import type { AnswerType } from "./question.ts";
 
+/**
+ * Public mainnet endpoints that serve event logs from weeks back, in order of preference.
+ * Many free endpoints refuse old logs or wide ranges, so readers fall back through these
+ * and ask for at most LOG_CHUNK blocks at a time.
+ */
+export const PUBLIC_RPCS = ["https://rpc.mevblocker.io", "https://gateway.tenderly.co/public/mainnet"] as const;
+export const LOG_CHUNK = 5_000n;
+
 export const IMD_API = "https://api.imd.fun";
 
 /** The `attester` that api.imd.fun reports for every oracle request; hardcoded in ShipOrBurnIMD. */
