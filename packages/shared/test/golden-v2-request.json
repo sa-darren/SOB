@@ -1,0 +1,46 @@
+{
+  "id": "16051ac5-3319-479c-ac22-9ca9a11cd727",
+  "status": "attested",
+  "question": "Use only https://aviationweather.gov/api/data/metar?ids=EGLL&format=json for the newest valid METAR observation at EGLL, London Heathrow. Return uint256 = obsTime * 2 + wet, where obsTime is that row's Unix observation time, and wet is 1 if a current-weather group in wxString contains RA or DZ (rain or drizzle, including -RA, SHRA and FZRA); ignore groups beginning RE or VC. Otherwise wet=0. Absent, null or empty wxString means no reported rain only when rawOb is a valid EGLL METAR and not NIL. If the API fails, the report is missing/invalid, or obsTime is future or more than 90 minutes old at retrieval, report unavailable rather than a number. Never infer from clouds, humidity or forecasts.",
+  "questionHash": "0x39eecf277118e4219d50e4352a2fcf943cf802239c546d54dd4baba53c72d787",
+  "chainId": 1,
+  "window": {
+    "toBlock": 26122901,
+    "fromBlock": 26122900,
+    "toBlockHash": "0x22cd78830715d67d27849123a084fe3b854a1af74b40cd7f73c727399eef3059"
+  },
+  "answerType": "uint256",
+  "evidence": "panel",
+  "definitions": {
+    "source": "Only NOAA Aviation Weather Center API, station EGLL (London Heathrow). This is a station observation, not all of London. Select the row with greatest obsTime.",
+    "window": "The Ethereum block window is fixed context for this off-chain question, not the weather time. obsTime at retrieval controls freshness.",
+    "missing": "Unavailable, invalid, future or older-than-90-minute observations must not be encoded as dry. Do not guess.",
+    "encoding": "answer = obsTime * 2 + wet. obsTime is Unix seconds. Split wxString on whitespace; wet=1 when a group contains RA or DZ and does not begin RE or VC. Otherwise wet=0. Missing wxString is dry only with a valid non-NIL rawOb."
+  },
+  "panelSize": 5,
+  "quorum": 4,
+  "consumer": {
+    "chainId": 1,
+    "verifyingContract": "0x37bfb8ac7c960e558657871d41ca70e07e7dbfff"
+  },
+  "attestation": {
+    "agreed": 4,
+    "answer": "0x00000000000000000000000000000000000000000000000000000000d58db550",
+    "figure": "3582834000",
+    "quorum": 4,
+    "chainId": 1,
+    "toBlock": 26122901,
+    "issuedAt": 1791417448,
+    "blockHash": "0x22cd78830715d67d27849123a084fe3b854a1af74b40cd7f73c727399eef3059",
+    "expiresAt": 1791439048,
+    "fromBlock": 26122900,
+    "panelSize": 5,
+    "requestId": "0x16051ac53319479cac229ca9a11cd72700000000000000000000000000000000",
+    "answerType": "uint256",
+    "panelJobId": "0xb9b745c20a1241b5a9d3c921cbafe9c900000000000000000000000000000000",
+    "questionHash": "0x39eecf277118e4219d50e4352a2fcf943cf802239c546d54dd4baba53c72d787"
+  },
+  "signature": "0x94d3d979ccf52901db4f6f21f07cd8e123f46f69a8aac9e79a88dcc40475c67317174ffbce45766f075a5865ff9837b33f88f0f6da770f498ca703ae0927bfb11c",
+  "signer": "0x5598aa9146215bc13eb26f2c692ad1461fd32982",
+  "attestedAt": "2026-10-07T23:57:28.304Z"
+}
