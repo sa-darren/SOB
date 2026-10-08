@@ -18,6 +18,8 @@ export interface VaultView {
   id: bigint;
   /** OWNER/REPO, read from the vault's question prefix. */
   repo: string;
+  /** The vault's canonical question prefix, sent with every settle. */
+  prefix: Hex;
   token: Address;
   symbol: string;
   decimals: number;

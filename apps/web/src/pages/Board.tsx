@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Embers } from "../components/Embers.tsx";
 import { Flaps } from "../components/Flaps.tsx";
 import { Countdown, DayGrid, DemoBanner, vaultStatus } from "../components/parts.tsx";
 import { useBoard } from "../data/hooks.ts";
@@ -42,14 +43,18 @@ function BoardLine({ vault, index }: { vault: VaultView; index: number }) {
         </div>
         <DayGrid vault={vault} />
         {/* lines clatter top to bottom, 70 ms apart */}
-        <Flaps
-          text={status.text}
-          cells={7}
-          tone={status.tone}
-          scorched={status.scorched}
-          delay={index * 70}
-          className="text-2xl md:text-4xl"
-        />
+        <span className="relative inline-block">
+          <Flaps
+            text={status.text}
+            cells={7}
+            tone={status.tone}
+            scorched={status.scorched}
+            delay={index * 70}
+            className="text-2xl md:text-4xl"
+          />
+          {/* the embers rise once the cell has clattered to BURNED */}
+          {status.scorched && <Embers delay={index * 70 + 700} />}
+        </span>
       </Link>
     </li>
   );
@@ -77,7 +82,7 @@ export function Board() {
         </div>
       </section>
 
-      <section aria-label="Ship Board" className="bg-board overflow-hidden rounded-lg">
+      <section aria-label="Ship Board" className="bg-board overflow-hidden rounded-lg ring-1 ring-[#2a2e32]">
         {isPending && <p className="px-4 py-8 text-base text-[#a4a9ad]">Reading vaults from the chain…</p>}
         {error && (
           <p className="text-signal-red px-4 py-8 text-base" role="alert">

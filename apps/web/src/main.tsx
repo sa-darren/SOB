@@ -3,6 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, NavLink, Route, Routes } from "react-router-dom";
 import { Board } from "./pages/Board.tsx";
+import { Create } from "./pages/Create.tsx";
 import { Trust } from "./pages/Trust.tsx";
 import { Vault } from "./pages/Vault.tsx";
 import "./styles.css";
@@ -22,6 +23,9 @@ function Shell() {
           <NavLink to="/" end className={nav}>
             Ship Board
           </NavLink>
+          <NavLink to="/new" className={nav}>
+            Lock tokens
+          </NavLink>
           <NavLink to="/how" className={nav}>
             How it works
           </NavLink>
@@ -31,6 +35,7 @@ function Shell() {
         <Routes>
           <Route path="/" element={<Board />} />
           <Route path="/v/:id" element={<Vault />} />
+          <Route path="/new" element={<Create />} />
           <Route path="/how" element={<Trust />} />
           <Route path="*" element={<p className="text-base">That page does not exist.</p>} />
         </Routes>

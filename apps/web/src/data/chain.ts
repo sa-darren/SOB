@@ -8,7 +8,7 @@ import type { BoardData, VaultView, Verdict } from "./types.ts";
 export const CHAIN_ID = 1;
 export const deployed = SHIP_OR_BURN[CHAIN_ID];
 
-const client = createPublicClient({
+export const client = createPublicClient({
   chain: mainnet,
   transport: fallback([
     ...(import.meta.env.VITE_RPC_URL ? [http(import.meta.env.VITE_RPC_URL as string)] : []),
@@ -93,6 +93,7 @@ export async function loadBoard(): Promise<BoardData> {
     return {
       id,
       repo: repoFromPrefix(hexToString(log.args.questionPrefix)),
+      prefix: log.args.questionPrefix,
       token: s.token,
       ...(meta.get(s.token) ?? { symbol: "TOKEN", decimals: 18 }),
       funder: s.funder,

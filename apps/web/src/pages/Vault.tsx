@@ -2,6 +2,7 @@ import { IMD_API } from "@ship-or-burn/shared";
 import { Link, useParams } from "react-router-dom";
 import { Flaps } from "../components/Flaps.tsx";
 import { DayGrid, DemoBanner, Lamps, vaultStatus } from "../components/parts.tsx";
+import { SettlePanel } from "../components/SettlePanel.tsx";
 import { VerifyBox } from "../components/VerifyBox.tsx";
 import { useLatestRequest, useVault } from "../data/hooks.ts";
 import type { VaultView, Verdict } from "../data/types.ts";
@@ -86,7 +87,7 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
 
 export function Vault() {
   const { id } = useParams();
-  const { vault, data, isPending } = useVault(id);
+  const { vault, data, isPending, refetch } = useVault(id);
   const latest = useLatestRequest(vault?.schedules.at(-1));
 
   if (isPending) return <p className="text-text-2 text-base">Reading the vault from the chain…</p>;
@@ -123,7 +124,7 @@ export function Vault() {
         <span className="text-text-2">/ Vault {vault.id.toString()}</span>
       </p>
 
-      <section className="bg-board mb-8 rounded-lg p-4 md:p-6">
+      <section className="bg-board mb-8 rounded-lg p-4 ring-1 ring-[#2a2e32] md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-ivory truncate text-xl font-bold md:text-2xl">
@@ -176,6 +177,22 @@ export function Vault() {
       <section className="mb-10">
         <h2 className="mb-3 text-xl font-bold">Verdicts</h2>
         <Ledger vault={vault} live={data.live} />
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-1 text-xl font-bold">Settle a verdict</h2>
+        <p className="text-text-2 mb-3 max-w-2xl text-base">
+          The keeper settles each verdict within minutes. If it has not, anyone can, from their own wallet, within about two
+          hours of the oracle run. The contract runs its six checks either way.
+        </p>
+        <SettlePanel
+          vault={vault}
+          suggested={r?.status === "attested" ? r.id : undefined}
+          onSettled={() => {
+            void refetch();
+            void latest.refetch();
+          }}
+        />
       </section>
 
       <section>

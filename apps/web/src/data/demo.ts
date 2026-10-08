@@ -1,6 +1,6 @@
 // Sample vaults shown only until the contract is launched. Nothing here is on-chain.
-import { DEAD } from "@ship-or-burn/shared";
-import type { Hex } from "viem";
+import { DEAD, mergedPrQuestion, questionPrefix } from "@ship-or-burn/shared";
+import { type Hex, stringToHex } from "viem";
 import type { VaultView, Verdict } from "./types.ts";
 
 const E18 = 10n ** 18n;
@@ -35,6 +35,7 @@ function vault(id: number, repo: string, results: ("shipped" | "missed")[], tran
   return {
     id: BigInt(id),
     repo,
+    prefix: stringToHex(questionPrefix(mergedPrQuestion(repo))),
     token: "0xd34a99bc0f67ae1bbd63c660e6d0b0dd03e263b7",
     symbol: "IMD",
     decimals: 18,
